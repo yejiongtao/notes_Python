@@ -1,0 +1,100 @@
+1.碰撞检测例子：
+    import pygame,sys,random
+
+    class MyBallClass(pygame.sprite.Sprite):
+        def __init__(self,image_file,location,speed):
+            pygame.sprite.Sprite.__init__(self)                 #调用父类的构造函数
+            self.image=pygame.image.load(image_file)
+            self.rect=self.image.get_rect()                     #获取矩形
+            self.rect.left,self.rect.top=location               #注意这个用法！等号右边是一个两个元素的列表，于是左边可以有两个值
+            self.speed=speed
+        def move(self):
+            self.rect=self.rect.move(self.speed)                #注意！pygame提供的移动的函数
+            if self.rect.left<0 or self.rect.right>width:
+                self.speed[0]=-self.speed[0]
+            if self.rect.top<0 or self.rect.bottom>height:
+                self.speed[1]=-self.speed[1]
+
+    def animate(group):                                         #把动作都放到一个函数里面
+        screen.fill([255,255,255])                              #涂底色，覆盖之前的图形
+        for ball in group:
+            ball.move()
+        for ball in group:
+            group.remove(ball)                                 #spritecollide是判断一个精灵与一组精灵的任何一个是否发生碰撞
+            if pygame.sprite.spritecollide(ball,group,False):  #所以要判断一个精灵与本组成员是否碰撞的时候，就要先把那个精灵从组                                                       里面除掉
+                ball.speed[0]=-ball.speed[0]
+                ball.speed[1]=-ball.speed[1]
+            group.add(ball)
+            screen.blit(ball.image,ball.rect)
+        pygame.display.flip()
+        pygame.time.delay(20)
+
+    pygame.init()
+    size=width,height=640,480                                   #注意这里！同时创建了一个列表和两个值
+    screen=pygame.display.set_mode(size)
+    image_file='Beach_Ball.png'
+    group=pygame.sprite.Group()                                 #要判断碰撞必须用到的组
+    for row in range(0,2):
+        for col in range(0,2):
+            location=[col*180+10,row*180+10]
+            speed=[random.choice([-2,10]),random.choice([-2,10])]
+            ball=MyBallClass(image_file,location,speed)
+            group.add(ball)                                     #这里是add不是append估计是因为这是Group类的子类，不是简单的列表
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+        animate(group)
+    
+    #这里实现的碰撞是矩形碰撞，要实现像素完美碰撞比较麻烦，而且会变慢，一般矩形碰撞就足够了
+
+2.统计时间：pygame.time.Clock类
+    Clock类会控制每隔一段时间开始一个新的循环
+    clock=pygame.time.Clock()
+    while True:
+        clock.tick(20)      #fps,frame per second 每秒完成20个循环
+
+3.pygame中的事件：
+    delay=100
+    interval=50
+    pygame.key.set_repeat(delay,interval)   #开始重复之前等待delay，两次时间之间间隔interval
+                                            #如果没有这一步，则一直按住也只会有一个事件
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+
+    其他事件：file:///Z:/1MINE/Software/2installed/ActivePython/Lib/site-packages/pygame/docs/ref/event.html
+    这里也有其他的很多文档
+        KEYUP, MOUSEMOTION, MOUSEBUTTONUP, MOUSEBUTTONDOWN
+        K_a, K_b, K_SPACE, K_ESCAPE
+
+4.鼠标事件
+    让小球跟着鼠标跑：
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.MOUSEMOTION:
+                ball.rect.center = event.pos()          #记住！中心的x叫centerx，center的y叫centery
+    鼠标按着的时候小球才跟着跑：
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                held_down=True
+            elif event.type == pygame.MOUSEBUTTONUP:    #太机智！
+                held_down=False
+            elif event.type == pygame.MOUSEMOTION:
+                if held_down:
+                    ball.rect.center = event.pos()
+
+5.定时器事件
+    pygame.time.set_timer(pygame.USEREVENT,1000)    #1000毫秒
+            #USEREVENT事实上是第一个用户可以用的事件序号，如果还要，就USEREVENT+1什么的
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.USEREVENT:
+    
+
+
+

@@ -1,0 +1,64 @@
+1.datetime模块   import datetime
+    when = datetime.datetime(2015,9,29,15,39,05)
+        模块中的datetime类，可以以年月日时分秒的顺序创建时间戳对象，或者指定各个参数：
+    when = datetime.datetime(year=2015,month=9,date=29,hour=15,minute=39,second=5)
+    print when.hour
+        获得各个部分（注意，这里面各个部分是以 int 存的）
+    print when.ctime()
+        转化成字符串的形式
+    date类只有年月日
+    time类只有时分秒
+    when= datetime.datetime.combine(today,some_time)
+        可以用datetime类中的combine方法把date对象和time对象结合起来
+    difference=today-yesterday
+        两个datetime对象的差类型是datedelta
+        注意：datedelta只有日、秒、微秒！
+    print datetime.datetime.now()
+        datetime类中的now方法返回当前时间戳，精确到微秒（10**-6秒），微秒也储存为整数
+    seconds_float=some_time.second+some_time.microsecond/float(1000000)
+        得到精确的秒数
+
+2.可以在关闭应用是把时间戳存到文件中，下次打开的时候读取，就可以根据这个时间差来实现相应的功能了
+用pickle直接储存datetime对象再方便不过了
+    import datetime,pickle
+    import os       #其中有可以判断文件是否存在的方法
+
+    if os.path.isfile('last_run.pkl'):
+        pickle_file = open('last_run.pkl','r')
+        last_time = pickle.load(pickle_file)
+        ...
+    pickle_file = open("last_run.pkl","w")      #存在就覆盖，不存在就创建
+
+3.try-except
+    try:
+        file=open('1.txt','r')
+    except:
+        print 'Failed'
+    可以用这种方法来判断文件的打开情况
+
+4.PythonCard中的timer模块
+    from PythonCard import timer,model
+    class MainWindow(model.Background)：
+
+        def on_initialize(self,event)：
+            self.timer1=timer.Timer(self.components.petwindow,-1)
+                #创建Timer对象，注意，需要将timer绑定到一个控件上面，好像随便哪个都是可以的
+            self.timer1.Start(5000)
+                #发射定时器，每5000毫秒响一次
+
+        def on_petwindow_timer(self,event):
+            #处理定时器事件
+
+        def on_close(self,event):
+            #程序关闭的时候
+
+5.PythonCard中的Gauge控件（计量器，类似于进度条）
+
+6.更多关于python：
+    turtle,xturtle,PyLogo,RUR-PLE 模块，用简单的代码控制一个小图像运动
+    VPython 模块，简单的代码实现3D图形
+    PyWinAuto 模块，通过模拟鼠标点击、键入文本等方式与其他Windows程序交互！！
+    win32com 模块，也是与windows程序交互的
+
+
+

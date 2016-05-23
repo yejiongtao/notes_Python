@@ -1,0 +1,28 @@
+1.random
+    注意！random.randint(1,3)   #则随机数的范围是1,2,3！
+
+2.alertDialog只有一个确定按钮，messageDialog有确定和取消按钮。
+    获得messaDialog的返回值：
+        dialog.messageDialog(self,'').accepeted==True
+    获得singleChoiceDialog返回值：
+        .accepted
+        .selecrtion
+
+3.要把字符串转化成命令：
+    string='print "123"'
+    exec string
+
+4.pythonCard中获得发送事件的组件的信息：（实际上是wxWidget中的办法）
+    def on_btn_mouseClick(self,event):
+        print event.eventObject._resource.name
+
+5.组件的位置可以用tuple(10,10),也可以用list[10,10]
+    但是tuple不能改，也不能访问单个分量
+
+6.用time.sleep()和pygame.time.delay()都可能会
+
+self.Update()
+
+7.交换两个变量可以这样：
+    a,b=b,a
+

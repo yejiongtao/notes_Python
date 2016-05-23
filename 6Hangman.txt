@@ -1,0 +1,98 @@
+#Hangman.py
+    import random
+    from PythonCard import model,dialog                 #注意这个dialog模块，负责产生对话框
+    
+    def find_letters(letter,string):    #找到所有对应位置
+        locations=[]
+        start=0
+        while string.find(letter,start,len(string))!=-1:
+            location=string.find(letter,start,len(string))
+            locations.append(location)
+            start=location+1
+        return locations
+    def replace_letters(string,locations,letter):   #猜对的字母替换出来
+        new_string=""
+        for i in range(0,len(string)):
+            if i in locations:
+                new_string+=letter
+            else:   
+                new_string+=string[i]           #注意这里，不能使+='-'因为之前已经有猜对过的了
+        return new_string
+
+    class Hangman(model.Background):
+        def on_initialize(self, event):         #重写这个事件处理器！
+            self.currentWord=''
+            file=open("words.txt","r")
+            self.lines=file.readlines()
+            file.close()
+            self.new_game()
+
+        def new_game(self):
+            self.components.textGuesses.text=''
+            self.components.textDisplay.text=''
+            self.currentWord=random.choice(self.lines)
+            self.currentWord=self.currentWord.strip()
+            for a in range(len(self.currentWord)):
+                self.components.textDisplay.text+='-'
+            self.components.head.visible=False
+            self.components.body.visible=False
+            self.components.arm1.visible=False
+            self.components.arm2.visible=False
+            self.components.leg1.visible=False
+            self.components.leg2.visible=False
+
+        def on_btnWord_mouseClick(self,event):  #猜单词
+            result=dialog.textEntryDialog(self,'What is the word','Hangman')    #dialog.textEntryDialog
+            self.components.textGuesses.text+=(' '+result.text)                 #dialog获得一个结果.text才是字符串
+            if result.text == self.currentWord:
+                dialog.alertDialog(self,"You did it!","Hangman")                #dialog.alertDialog
+                self.new_game()
+            else:
+                self.wrong_guess()
+
+        def wrong_guess(self):  
+            dialog.alertDialog(self,"WRONG!!","Hangman")
+            if self.components.head.visible==True:
+                if self.components.body.visible==True:
+                    if self.components.arm1.visible==True:
+                        if self.components.arm2.visible==True:
+                            if self.components.leg1.visible==True:
+                                if self.components.leg2.visible==True:
+                                    dialog.alertDialog(self,'You lost. The word was '+self.currentWord,'Hangman')
+                                    self.new_game()
+                                else:
+                                    self.components.leg2.visible=True
+                            else:
+                                self.components.leg1.visible=True
+                        else:
+                            self.components.arm2.visible=True
+                    else:
+                        self.components.arm1.visible=True
+                else:
+                    self.components.body.visible=True
+            else:
+                self.components.head.visible=True
+
+        def on_btnLetter_mouseClick(self,event):                #猜字母
+            result=dialog.textEntryDialog(self,'Enter a letter:','Hangman')
+            guess=result.text
+            if len(guess)!=1:
+                dialog.alertDialog(self,'Enter one letter only!',"Hangman")
+            else:
+                self.components.textGuesses.text+=" "+guess
+                if guess in self.currentWord:
+                    locations=find_letters(guess,self.currentWord)
+                    self.components.textDisplay.text=replace_letters(self.components.textDisplay.text,locations,guess)
+                    if '-' not in self.components.textDisplay.text:
+                        dialog.alertDialog(self,'You win!!!!','Hangman')
+                        self.new_game()
+                else:
+                    self.wrong_guess()
+
+        def on_menuNewGame_select(self,event):          #使用菜单在游戏过程中开始新的游戏
+            self.new_game()
+
+    app=model.Application(Hangman)          #记住这个！实例化！不然什么都没有！
+    app.MainLoop()
+
+

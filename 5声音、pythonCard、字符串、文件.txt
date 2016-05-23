@@ -1,0 +1,105 @@
+1.声音（pygame.mixer模块）
+    播放一些音效：
+        pygame.mixer.init()
+        splat=pygame.mixer.Sound("splat.wav")   #Sound是一个类
+        splat.play()
+    播放音乐：
+        pygame.mixer.init()
+        pygame.mixer.music.load("bg_music.mp3")
+        pygame.mixer.music.play()
+    调整音量：
+        splat.set_volume(0.3)                   #每个声音对象都有set_volume()
+        pygame.mixer.music.set_volume(0.5)      #0-1
+    音乐是否放完：
+        背景音乐开始放后，pygame就会去干别的事情，比如放音效，要想播完背景音乐后才放音效：
+        while True:
+            if not pygame.mixer.music.get_busy():
+                splat.play()                    #如果还在放音乐，get_busy()返回True
+    重复播放：
+        pygame.mixer.music.play(3)      #重复3次
+        pygame.mixer.music.play(-1)     #一直重复
+    停止音乐：
+        pygame.mixer.music.fadeout(2000)    #两秒钟内渐弱
+
+2.用pythonCard做UI（要安装wxPython模块，是wxWidget在Python上的应用）
+    （我的2.7上面居然不能用，只能在2.5上面用）
+ 
+    1）在resource editor上面做界面，保存为.rsrc.py文件，文件名与对应的.py相同
+    2）修改.py文件
+        from PythonCard import model
+
+        class MainWindow(model.Background):
+            def on_Button1_mouseClick(self,event):          #Button1是设置好的组件名，函数格式必须按照这样
+                                                            #这是个事件处理器，self指的是主窗口！
+                                                            #mouseDown,mouseUp,mouseDrag,mouseMove,mouseDoubleClick
+                old_position=self.components.Button1.position
+                self.components.Button1.position=[old_position[0]+20,old_position[1]+10]
+
+        app=model.Application(MainWindow)
+        app.MainLoop()
+
+3.  textField.text  是字符串，要转化成数字才能用
+    spinner     可以微调的输入框，只能是整数。spinner.value类型是int
+                注意微调框有最大值和最小值
+    菜单中，&convert，前面那个&表示把C做成快捷键。on_menuConvert_select(self,event):
+    组件、菜单项中都有一个command，两个要完成同样功能的组件可以连到同一个command上面，on_cmdC2F_command(self,event):
+
+4.字符串处理
+    换行：空的print 或\n换行
+        逗号避免换行
+    水平间隔：\t
+    在字符串中间打印变量：print "I am %i years old"%age   整数%i  小数%f  字符串%s  科学计数法%.3e  自动选择是否科学%g
+                          print "%d+%d=%d"%(a,b,c)
+    数字：      %.2f    %+f总显示符号
+    储存格式化数字：    my_string="%d"%123
+    分解字符串：names=name_string.split(',')在出现逗号的地方分解字符串，得到一个列表
+                如果没有指定，则按空白符分解
+    串接字符串：name_string=' '.join(names)在names列表的各个项之间插入一个空格
+    搜索字符串：i=0
+                while lines[i].startswith('要搜索的东西'):
+                    i+=1
+                还有.endswith()
+    在字符串中搜索：if 'maple' in my_string:
+                        position=my_string.index('maple')
+        增加一个find()的用法：
+            my_string.find('ab',start,len(my_string))
+            注意！是在整个串里面找，找到就返回第一个的位置，找不到返回-1（-1也非零！）
+            所以要找串中包含的所有某子串的位置：
+                start=0
+                locations=[]
+                while (location = my_string.find('a',start,len(my_string))) != -1   #python中不能在while条件中赋值！老老实实下面                                                                     再来一行赋值
+                    locations.append(location)
+                    start=location+1
+                    #估计当开始位置大于结束位置的时候也会返回-1
+    删除字符串的部分：short_string = my_string.strip('de')删除字符串末尾的指定东西，若没有，则什么也不删
+                     若没指定，则删除末尾的空白符
+    大小写：string2=string1.lower()
+            string3=string1.upper() #注意都是创建一个副本
+
+5.文件
+    路径名：windows中正斜杠和反斜杠都是可以的，但由于转义符的存在，所以必须得\\，或者/就行
+    file=open("1.txt","r")
+        "w"写文件，原来的内容会丢失，若文件不存在，则创立一个新的文件
+        "a"追加文件内容，若文件不存在，则会出错
+        file.close()    要记得关闭文件，若不关闭其他程序就无法访问，更重要的是！写进去的内容只有在关闭的时候才会被写到文件中！
+    lines=file.readlines()  #以行为单位读取整个文件，获得一个列表，每个元素为一行
+    first_line=file.readline()  #每次读一行
+    定位：
+        file.seek(0)    #定位到距离文件开始的某字节处
+    二进制文件不能用readline，因为根本没有换行符：
+        file=open("1.bmp","rb")
+    写文件:
+        file.write("\nNihao")
+        print>>file,"Hello"     #print重定向输出，有时候很方便
+
+    用pickle模块储存数据
+        import pickle
+        my_list=['Tom',18,21.1]
+        pickle_file=open('my_pickled_list.pkl','w') #创建一个文件，注意后缀！
+        pickle.dump(my_list,pickle_file)            #dump，把数据倒进去
+        pickle_file.close()
+
+        pickle_file=open('my_pickled_list.pkl','r')
+        recovered_list=pickle.load(pickle_file)
+        pickle_file.close()
+    

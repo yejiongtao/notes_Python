@@ -1,0 +1,115 @@
+1.把程序分成较小的部分有三种方法：
+    函数、对象、模块
+
+2.函数
+    def myFunc():
+        print "inside"
+        print           #空一行
+        return 'good'
+    myFunc()    #call the function
+
+注意：函数中可以访问到全局变量！只要不试图对变量重新赋值。
+        若重新赋值了，会自动产生一个新的变量，原来的全局变量不会变！
+        若要在函数中使用全局变量，则global a
+    但是！！在函数中可以改变全局列表的元素！！
+
+3.对象
+        class Ball:
+            def bounce(self):       #调用类的方法的时候，python会把调用者作为第一个参数传过来，所以这个self是必须的！
+                self.direction='down'
+        myBall=Ball()
+        myBall.color='red'
+    非常有意思的是，因为是动态语言，所以在类声明的时候是没有变量成员的，实例化的时候随便加。但也没人会乱加，毕竟那些方法是要复用的。
+
+    要想在声明的时候初始化数据成员，用__init__()方法
+        class Ball:
+            def __init__(self,color):
+                self.color=color
+            def bounce(self):
+                self.direction='down'
+        myBall=Ball('red')
+
+    像__init__()这样的方法叫特殊方法，是python在创建类的时候自动加上的。
+    print myBall #默认会打出关于这个实例的乱七八糟的信息，要想打出自己的东西，就要重写__str__()方法
+        class Ball:
+            def __str__(self):
+                msg="Hi,my ball is "+self.color
+                return msg
+    
+    建议通过方法对属性进行修改，而不是直接改。
+    python中没有提供隐藏属性的的途径。
+
+4.多态和继承
+    多态指不同的类中可以有同名的方法。python中不支持函数重载，重载的作用有两点：
+        参数不同类型：python是动态语言，本身就支持
+        参数个数不同：可以用缺省参数来实现。
+    继承：
+        class Son(Parent):
+            def myFunc():
+                pass        #pass关键字用来占位，在函数内容为空的情况下依旧能运行
+
+5.模块（里面就是一些函数）
+        import myModule
+        myModule.myFunc()   #因为里面的函数实在myModule的命名空间里面的
+    也可以这样:
+        from myModule import myFunc
+        myFunc()            #把myFunc引入到局部命名空间来
+    但是要小心不能与局部的函数名冲突
+        from myModule import *  #引入所有的名
+
+6.一些常用标准模块
+    time.sleep(1)           #一秒
+    random.randint(1,100)
+    random.random()         #创造0-1的浮点数
+
+7.pygame
+    pygame程序要保持事件循环一直进行，事件循环停止程序就结束了
+    所有的pygame程序都该有的：
+        import pygame,sys
+        pygame.init()
+        screen = pygame.display.set_mode([640,480])
+        #搁这儿画图
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+
+    画图：
+        screen.fill([255,255,255])
+        pygame.draw.circle(screen,[255,0,0],[100,100],40,0)     #(哪个表面，颜色，位置，半径，线宽)
+        pygame.draw.rect(screen,[0,255,0],[100,100,300,300],2)  #线宽=0的话会填充整个图形，>0就是一个轮廓了
+                                    #注意矩形是[left,top,width,height]
+        pygame.display.filp()       #pygame会有屏幕的两个副本（双缓冲），一个显示，在另一个上面画好之后翻过来
+    颜色
+        如果想用颜色名来指定颜色的话：
+            from pygame.color import THECOLORS
+            screen.fill(THECOLORS['red'])   #THECOLORS是一个以字符串为key的列表
+        获得随机颜色的一种方法：
+            colorName = random.choice(THECOLORS.keys())         #这个choice应该就是在列表中随机选元素
+            color = THECOLORS[colorName]
+    几种画正弦曲线的办法：
+        画点：
+            #import math
+            for x in range(0,640):
+                y = int(math.sin(x/640.0*4*math.pi)*200+240)    #注意这里的math.sin() math.pi
+                screen.set_at([x,y],[0,0,0])                    #screen.get_at([x,y])可以获得该点颜色
+        连线：
+            plotPoints=[]
+            for x in range(0,640):
+                y= int(math.sin(x/640.0*4*math.pi)*200+240)
+                plotPoints.append([x,y])
+            pygame.draw.lines(screen,[0,0,0],False,plotPoints,1)    #lines(,颜色,是否把最后一点与第一点相连,点集,线宽)
+    图片:
+        myBall = pygame.image.load("Beach_Ball.png")      #载入图片，myBall对象是一个表面！
+        screen.blit(myBall,[50,50])                       #把myBall表面复制到screen表面上面来。blit是块移，就是像素的复制
+                                                          #[50,50]是myBall左上角的位置
+    一些技巧：
+        如果想动画在关掉窗口之前一直动，就要把代码加到那个while True里面去
+        sreen.get_width()  screen.get_height()
+        动画：pygame.time.delay(10)        #单位是毫秒
+    动画精灵sprite
+        sprite指四处移动的单个图像
+        pygame中有个sprite模块，里面有个基类Sprite
+    碰撞检测
+        见下页
+

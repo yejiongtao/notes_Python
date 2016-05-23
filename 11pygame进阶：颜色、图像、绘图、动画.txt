@@ -1,0 +1,191 @@
+1.关于颜色
+    一个展示颜色的例子：
+        import pygame
+        from pygame.locals import *
+        from sys import exit
+         
+        pygame.init()
+         
+        screen = pygame.display.set_mode((640, 480), 0, 32)     #注意色深
+         
+        def create_scales(height):
+            red_scale_surface = pygame.surface.Surface((640, height))
+            green_scale_surface = pygame.surface.Surface((640, height))
+            blue_scale_surface = pygame.surface.Surface((640, height))
+            for x in range(640):
+                c = int((x/640.)*255.)
+                red = (c, 0, 0)
+                green = (0, c, 0)
+                blue = (0, 0, c)
+                line_rect = Rect(x, 0, 1, height)
+                pygame.draw.rect(red_scale_surface, red, line_rect)
+                pygame.draw.rect(green_scale_surface, green, line_rect)
+                pygame.draw.rect(blue_scale_surface, blue, line_rect)
+            return red_scale_surface, green_scale_surface, blue_scale_surface
+         
+        red_scale, green_scale, blue_scale = create_scales(80)      #函数可以返回多个值！
+         
+        color = [127, 127, 127]
+         
+        while True:
+         
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    exit()
+         
+            screen.fill((0, 0, 0))
+         
+            screen.blit(red_scale, (0, 00))
+            screen.blit(green_scale, (0, 80))
+            screen.blit(blue_scale, (0, 160))
+         
+            x, y = pygame.mouse.get_pos()
+         
+            if pygame.mouse.get_pressed()[0]:              #mouse.get_pressed()估计返回一个三元tuple，[0]代表左键
+                for component in range(3):
+                    if y > component*80 and y < (component+1)*80:
+                        color[component] = int((x/639.)*255.)
+                pygame.display.set_caption("PyGame Color Test - "+str(tuple(color)))
+         
+            for component in range(3):
+                pos = ( int((color[component]/255.)*639), component*80+40 )
+                pygame.draw.circle(screen, (255, 255, 255), pos, 20)
+         
+            pygame.draw.rect(screen, tuple(color), (0, 240, 640, 240))
+         
+            pygame.display.update()
+
+    颜色值不能大于255，在调整的时候可以巧妙用python的内置函数min：
+        r = min(r,255)
+
+    混色（渐变为另外一个颜色）
+        线性插值：将这第二种颜色与第一种颜色的差乘以一个0~1之间的小数，然后再加上第一种颜色就行了。
+        def blend_color(color1, color2, blend_factor):
+            r1, g1, b1 = color1
+            r2, g2, b2 = color2
+            r = r1 + (r2 - r1) * blend_factor
+            g = g1 + (g2 - g1) * blend_factor
+            b = b1 + (b2 - b1) * blend_factor
+            return int(r), int(g), int(b)
+
+2.关于图像
+        （只有含有Alpha通道的图片才有可能设为透明）
+        游戏中多用jpeg（有损压缩，无透明）、png（无损压缩、透明）。
+            少用gif（支持动画、透明，但只有256色）、bmp（windows上的，无压缩，极大）
+        pygame中把各种图片都转化成为Surface对象来处理
+
+    创建Surface对象：
+        mySurface = pygame.image.load('1.jpg')
+            会自动转化成为Surface对象
+        mySurface = pygame.Surface((256,256))
+        mySurface = pygame.Surface([256,256],flags=SRCALPHA, depth=32)
+            创建一个空的Surface对象，要有透明的话Surface就要SRCALPHA，而且色深要32
+            色深没定的话会自动跟display一样
+
+    Surface对象的转化：
+        .convert()
+        .convert_alpha()
+    
+    矩形对象
+        一旦有了Rect对象，我们就可以对其做很多操作，比如调整位置和大小，判断一个点是否在其中等等。
+        用左上角点和右下角点确定一个矩形：
+            my_rect1 = (100, 100, 200, 150)
+            my_rect2 = ((100, 100), (200, 150))
+                #上两种为基础方法，表示的矩形也是一样的
+            my_rect3 = Rect(100, 100, 200, 150)
+            my_rect4 = Rect((100, 100), (200, 150))
+        Rect对象在pygame.locals中定义
+
+    裁剪：定义了裁剪区域之后，只有这个区域中的像素会被改变，默认是整个屏幕
+        screen.set_clip(0,400,200,600)
+            设置clipping area
+        screen.get_clip()
+            获得当前clipping area
+    
+    子表面subsurface
+        在往子表面上画东西的时候，同时也会向他的父表面上画。
+        比如要把一个单词中的各个字母弄成不同的颜色，就可以先把单词表面做出来，然后抠出一个个子表面：
+            my_font_image = Pygame.load("font.png")
+            letters = []
+            letters["a"] = my_font_image.subsurface((0,0), (80,80))
+            letters["b"] = my_font_image.subsurface((80,0), (80,80))
+
+    填充surface
+        mySurface.fill([0,0,0])
+            第二个参数可以提供一个矩形来指定填充的位置
+    
+    surface上面的像素
+        mySurface.set_at(position,color)
+            把指定位置的像素设为指定的颜色
+        mySurface.get_at(position)
+            获得某点的颜色。注意，全屏的时候一定是硬件的，而这个方法对硬件是很慢的，所以要慎用
+    
+    锁定surface
+        pygame往surface上画东西的时候，首先会锁定surface，以保证不会被其他进程干扰，画完后再解锁。
+        在循环画东西的时候，就会不断地加锁、解锁，缺少效率，此时可以人为地加锁、解锁
+            screen.lock()
+            for ..
+                ..
+            screen.unlock()
+    
+3.绘制图形
+    pygame.draw可以画不同的图形，参数分别是surface、颜色、一系列坐标、线宽。
+    返回一个Rect对象！
+    函数们：
+        rect	绘制矩形    pygame.draw.rect(Surface, color, Rect, width=0)
+                可以用fill来画矩形，还更快一点，因为是显卡完成的
+        polygon	绘制多边形（三个及三个以上的边）    
+                pygame.draw.polygon(Surface, color, pointlist, width=0)
+        circle	绘制圆  pygame.draw.circle(Surface, color, pos, radius, width=0)
+        ellipse	绘制椭圆  pygame.draw.ellipse(Surface, color, Rect, width=0)  外接矩形！！
+        arc	    绘制圆弧  pygame.draw.arc(Surface, color, Rect, start_angle, stop_angle, width=1)
+                不封闭，width不能是0
+        line	绘制线  pygame.draw.line(Surface, color, start_pos, end_pos, width=1)
+        lines	绘制一系列的线  pygame.draw.lines(Surface, color, closed, pointlist, width=1)
+                closed是一个bool，指明是否封闭
+        aaline	绘制一根平滑的线    antialiasing抗锯齿  这两个的参数跟上面一样
+        aalines	绘制一系列平滑的线
+
+4.关于动画
+    帧率FPS(Frame Per Second)
+        一般的电视画面是24FPS；
+        30FPS基本可以给玩家提供流程的体验了；
+        LCD的话，60FPS是常用的刷新率，所以你的游戏的帧率再高也就没什么意义了；
+        而绝大多数地球人都无法分辨70FPS以上的画面了！
+    Clock：
+        clock=pygame.time.Clock()
+        time_passed=clock.tick()    #返回距离上次tick经过的毫秒数
+        time_passed=clock.tick(30)  #在循环中加入这一句，则最大的FPS就是30（个循环每秒）
+
+    为了让动画移动的速度在各个机器上面看都是一样的：
+        方法一：
+            clock.tick(30)设置最大FPS
+            但是那些很慢的机器可能连这个都达不到，就很麻烦了。
+        方法二：better
+            设置一个速度（像素/秒），每个循环所变化的位移 = 速度 * 距上次循环经过的秒数
+                speed = 250
+                while True:    
+                    for event in pygame.event.get():
+                        if event.type == QUIT:
+                            exit()
+                 
+                    screen.blit(background, (0,0))
+                    screen.blit(sprite, (x, 100))    
+                 
+                    time_passed = clock.tick()                      #获得据上次tick的毫秒数
+                    time_passed_seconds = time_passed / 1000.0      #转化成秒
+                 
+                    distance_moved = time_passed_seconds * speed    #计算位移差
+                    x += distance_moved
+                 
+                    # 想一下，这里减去640和直接归零有何不同？
+                    if x > 640.:
+                        x -= 640.    
+                 
+                    pygame.display.update()
+            这样不管是快的机器还是慢的机器就都是一样的速度了，只是快的机器的fps高一点，显得流畅一点。
+            
+            ATTENTION！clock.tick(30)返回的也是距离上一次tick的毫秒数，所以方法二那里可以加一个最大FPS，节省CPU资源！
+
+
+

@@ -1,0 +1,60 @@
+1.#example1
+    from PyQt4 import QtGui,QtCore
+    import sys
+
+    app=QtGui.QApplication(sys.argv)
+
+    label=QtGui.QLabel('Hello Qt!')
+    dialog=QtGui.QDialog()
+    btnDialog=QtGui.QPushButton('DIALOG')
+    btnQuit=QtGui.QPushButton('QUIT',dialog)
+
+    QtCore.QObject.connect(btnQuit,QtCore.SIGNAL('clicked()'),app,QtCore.SLOT('quit()'))
+    QtCore.QObject.connect(btnDialog,QtCore.SIGNAL('clicked()'),dialog,QtCore.SLOT('show()'))
+
+    spinbox=QtGui.QSpinBox()
+    slider=QtGui.QSlider()
+    spinbox.setRange(0,130)
+    slider.setRange(0,130)
+    QtCore.QObject.connect(slider,QtCore.SIGNAL('valueChanged(int)'),spinbox,QtCore.SLOT('setValue(int)'))
+    QtCore.QObject.connect(spinbox,QtCore.SIGNAL('valueChanged(int)'),slider,QtCore.SLOT('setValue(int)'))
+
+    widget=QtGui.QWidget()
+    layout=QtGui.QVBoxLayout()
+    layout.addWidget(label)
+    layout.addStretch(1)
+    layout.addWidget(spinbox)
+    layout.addWidget(slider)
+    layout.addStretch(1)
+    layout.addWidget(btnDialog)
+    widget.setLayout(layout)
+
+    widget.show()
+
+    sys.exit(app.exec_())   # attention! app.exec_() starts the event loop of Qt
+
+2.#example2
+    from PyQt4 import QtCore,QtGui
+    import sys
+
+    class MyWidget(QtGui.QWidget):
+        def __init__(self,parent=None):
+            QtGui.QWidget.__init__(self,parent)
+
+            self.setFixedSize(200,120)
+            self.btnQuit=QtGui.QPushButton('QUIT',self)
+            QtCore.QObject.connect(self.btnQuit,QtCore.SIGNAL('clicked()'),
+                                   QtGui.qApp,QtCore.SLOT('quit()'))        #注意这里这个槽，如果是关闭当前窗口则是'close'
+
+    app=QtGui.QApplication(sys.argv)
+    widget=MyWidget()
+    widget.setWindowTitle('My Window')
+    widget.show()
+    sys.exit(app.exec_())
+
+3.自定义的信号与槽的实现方法：
+    def enable_change_button(self):
+        ...
+    然后在连接的时候直接
+        connect(btn, QtCore.SIGNAL('clicked'), self.enable_change_button)   
+            #注意！注意！注意！不用括号！不用四个参数！

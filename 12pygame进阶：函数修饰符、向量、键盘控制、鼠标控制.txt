@@ -1,0 +1,129 @@
+1.python中的函数修饰符
+    class Vector2(object):
+        ...
+        
+        @classmethod
+        def from_points(cls,P1,P2):
+            return cls(P2[0]-P1[0],P2[1]-P2[0])
+    这个 @classmethod 把from_points变成了类方法，可以直接 Vector2.from_points()调用
+
+    乱入，类中除了__init__, __str__ 重载外，还有__add__, __sub__, __mul__, __div__
+
+2.关于向量
+    gameobjects模块中就有向量类，去下载。
+    使用方法：
+        from gameobjects.vector2 import *   #三维向量就vector3
+        A = (10.0, 20.0)
+        B = (30.0, 35.0)
+        AB = Vector2.from_points(A, B)      #从两个点创建向量，也可以直接 AB = Vector2(20,15)
+
+        print "AB * 2 is", AB * 2
+        print "AB / 2 is", AB / 2
+        print "AB + (–10, 5) is", AB + (–10, 5)         #向量运算
+        print "Magnitude of AB is", AB.get_magnitude()  #获得向量长度
+        print "AB normalized is", AB.get_normalized()   #向量标准化，获得一个单位向量（其实就是俩分量/magnitude）
+
+        AB.normalize()  好像是直接把AB改掉，不是产生副本。
+
+        要让两个元组的分量分别对应相减：
+            destination = Vector2( *pygame.mouse.get_pos() ) - Vector2( *sprite.get_size() )/2
+            在元素前面加一个 *
+
+3.key模块
+        key.get_focused —— 返回当前的pygame窗口是否激活
+        key.get_pressed —— 返回一个字典，索引就是键值
+                    pressed_key = pygame.key.get_pressed()
+                    if pressed_key[K_SPACE]:
+                        ...
+        key.get_mods —— 按下的组合键（Alt, Ctrl, Shift）
+        key.set_mods —— 你也可以模拟按下组合键的效果（KMOD_ALT, KMOD_CTRL, KMOD_SHIFT）
+        key.set_repeat —— 无参数调用设置pygame不产生重复按键事件，
+                        二参数(delay, interval)调用设置重复事件发生的时间
+        key.name —— 接受键值返回键名
+
+    用方向键控制8个方向的例子：
+        pressed_keys = pygame.key.get_pressed()
+        key_direction = Vector2(0, 0)
+
+        if pressed_keys[K_LEFT]:
+            key_direction.x = -1        #向量的x分量可以这样access
+        elif pressed_keys[K_RIGHT]:
+            key_direction.x = +1
+        if pressed_keys[K_UP]:
+            key_direction.y = -1
+        elif pressed_keys[K_DOWN]:
+            key_direction.y = +1
+     
+        key_direction.normalize()       #这样东南、西北这些方向才也是单位向量
+
+        后面：
+            sprite_pos+= key_direction * sprite_speed * time_passed_seconds
+
+    上面的只实现了八个方向，要做到全方向，就要先转向，再移动（就像开车一样，前后是动力，左右是方向）
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    exit()
+         
+            pressed_keys = pygame.key.get_pressed()
+         
+            rotation_direction = 0.
+            movement_direction = 0.
+         
+            # 更改角度
+            if pressed_keys[K_LEFT]:
+                rotation_direction = +1.
+            if pressed_keys[K_RIGHT]:
+                rotation_direction = -1.
+            # 前进、后退
+            if pressed_keys[K_UP]:
+                movement_direction = +1.
+            if pressed_keys[K_DOWN]:
+                movement_direction = -1.
+         
+            screen.blit(background, (0,0))
+         
+                # 获得一条转向后的鱼
+            rotated_sprite = pygame.transform.rotate(sprite, sprite_rotation)
+                # 转向后，图片的长宽会变化，因为图片永远是矩形，为了放得下一个转向后的矩形，外接的矩形势必会比较大
+            w, h = rotated_sprite.get_size()
+                # 获得绘制图片的左上角（感谢pltc325网友的指正）
+            sprite_draw_pos = Vector2(sprite_pos.x-w/2, sprite_pos.y-h/2)
+            screen.blit(rotated_sprite, sprite_draw_pos)    
+         
+            time_passed = clock.tick()
+            time_passed_seconds = time_passed / 1000.0
+         
+            # 图片的转向速度也需要和行进速度一样，通过时间来控制
+            sprite_rotation += rotation_direction * sprite_rotation_speed * time_passed_seconds
+         
+            # 获得前进（x方向和y方向），这两个需要一点点三角的知识
+            heading_x = sin(sprite_rotation*pi/180.)
+            heading_y = cos(sprite_rotation*pi/180.)
+            # 转换为单位速度向量
+            heading = Vector2(heading_x, heading_y)
+            # 转换为速度
+            heading *= movement_direction
+         
+            sprite_pos+= heading * sprite_speed * time_passed_seconds
+         
+            pygame.display.update()
+
+4.鼠标控制
+    让pygame完全控制鼠标（少用）
+        pygame.mouse.set_visible(False)
+        pygame.event.set_grab(True) #一般情况下，pygame窗口与其他应用共享鼠标事件。
+                                    #这个设为True之后，其他应用就不能获得鼠标事件了
+    函数们：
+        pygame.mouse.get_pressed —— 返回按键按下情况，返回的是一元组，分别为(左键, 中键, 右键)，如按下则为True
+        pygame.mouse.get_rel —— 返回相对偏移量，(x方向, y方向)的一元组
+        pygame.mouse.get_pos —— 返回当前鼠标位置(x, y)
+        pygame.mouse.set_pos —— 显而易见，设置鼠标位置
+        pygame.mouse.set_visible —— 设置鼠标光标是否可见
+        pygame.mouse.get_focused —— 如果鼠标在pygame窗口内有效，返回True
+        pygame.mouse.set_cursor —— 设置鼠标的默认光标式样   
+        pyGame.mouse.get_cursor —— 不再解释。
+    很多时候鼠标与键盘结合起来控制，比如鼠标控制视角，键盘控制移动、操作等
+
+
+
